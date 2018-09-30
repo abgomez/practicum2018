@@ -1,0 +1,6 @@
+# all folder but processor #
+*config*
+/data
+/keys
+/logs
+/policy
