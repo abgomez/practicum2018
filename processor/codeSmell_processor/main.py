@@ -15,11 +15,12 @@
 
 import argparse
 import sys
+import sawtooth_sdk
 
 from sawtooth_sdk.processor.core import TransactionProcessor
 from sawtooth_sdk.processor.log import init_console_logging
 
-from codeSmell.handler import codeSmellTransactionHandler
+from codeSmell_processor.handler import codeSmellTransactionHandler
 
 
 def parse_args(args):
