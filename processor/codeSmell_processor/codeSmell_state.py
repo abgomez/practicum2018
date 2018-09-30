@@ -14,17 +14,114 @@
 # -----------------------------------------------------------------------------
 
 import hashlib
-import json
-import logging
-import sawtooth_sdk
 
-LOGGER = logging.getLogger(__name__)
+from sawtooth_sdk.processor.exceptions import InternalError
 
 
-CODESMELL_NAMESPACE = hashlib.sha512(
-    'code-smell'.encode('utf-8')).hexdigest()[0:6]
+CODESMELL_NAMESPACE = hashlib.sha512('code-smell'.encode('utf-8')).hexdigest()[0:6]
 
+def _make_codeSmell_address(name):
+    return CODESMELL_NAMESPACE + hashlib.sha512(name.encode('utf-8')).hexdigest()[:64]
 
+class codeSmell:
+    def _init_(self, name, value, action, owmer):
+        self.name = name
+        self.value = value
+        self.action = action
+        self.owner = owner
+
+class codeSmellState:
+    TIMEOUT = 3
+
+    def _init_(self, context):
+        """Constructor
+
+        Ars:
+            context (sawtooth_sdk.processor.context.Context): Access to
+                validator state from within the transaction processor
+        """
+
+        self._context = context
+        self._address_cache = {}
+
+    def set_codeSmell(self, codeSmell_name, codesmell):
+        """Store the codeSmell in the validator state
+
+        Args:
+            codeSmell_name (str): The name
+            codesmell (codeSmell): The information specifying the current specs.
+        """
+        #dictCodeSmells = self._load_codeSmell(codeSmell_name=codeSmell_name)
+        dictCodeSmells[codeSmell_name] = codesmell
+
+        self._store_codeSmell(codeSmell_name, dictCodeSmells=dictCodeSmells)
+
+    def _load_codeSmell(self, codeSmell_name):
+        adress = _make_codeSmell_address(codeSmell_name)
+
+        if address in self._address_cache:
+            if self._address_cache[address]:
+                serialized_codeSmell = self._address_cache[address]
+                dictCodeSmells = self._deserialize(serialized_codeSmell)
+            else:
+                dictCodeSmells = {}
+        else:
+            state_entries = self._context.get_state([address], timeout=self.TIMEOUT)
+            if state_entries:
+                self._address_cache[address] = state_entries[0].data
+                dictCodeSmells = self._deserialize(data=state_entries[0].data)
+            else:
+                self._address_cache[address] = None
+                dictCodeSmells = {}
+
+        return dictCodeSmells
+
+    def _store_codeSmell(self, codeSmell_name, codesmell):
+        adress = _make_codeSmell_address(codeSmell_name)
+
+        state_data = self._serialize(codesmell)
+        self._address_cache[adress] = state_data
+
+        self._context.set_state({adress: state_data}, timeout=self.TIMEOUT)
+
+    def _deserialize(self, data):
+        """Take bytes stored in state and deserialize them into Python codeSmell Objects
+
+        Args:
+            data (bytes): The UTF-8 encoded string stored in state.
+
+        Returns:
+            (dict): codesmell name (str) keys, codesmell values.
+        """
+        dictCodeSmells = {}
+        try:
+            for codesmell in data.encode().split("|"):
+                name, value, action, owner = payload.decode().split(",")
+
+                dictCodeSmells[name] = codeSmell(name, value, action, owner)
+
+        except ValueError:
+            raise InternalError("Failed to deserialize codesmell data")
+
+        return dictCodeSmells
+
+    def _serialize(self, codesmell):
+        """Takes a dict of codeSmell objects and serializes them into bytes.
+
+        Args:
+            codesmell (dict): codesmell name (str) keys, codesmell values.
+
+        Returns:
+            (bytes): The UTF-8 encoded string stored in state.
+        """
+
+        codesmell_str = []
+        for name, g in codesmell.items():
+            codesmell_str = ",".join([name, g.value, g.action, g.owner])
+            codesmell_str.append(codesmell_str)
+
+        return "|".join(sorted(codesmell_str)).encoded()
+"""
 def _get_address(key):
     return hashlib.sha512(key.encode('utf-8')).hexdigest()[:62]
 
@@ -76,3 +173,4 @@ class codeSmellState(object):
         else:
             entry = None
         return entry
+"""

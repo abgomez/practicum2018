@@ -21,29 +21,21 @@ class codeSmellPayload(object):
     def __init__(self, payload):
         try:
             #The payload is csv utf-8 encoded string
-            name, largeClass, smallClass, largeMethod, smallMethod,\
-            largeParameterList, godClass, inapropriateIntimacy,\
-            commentsRatioLower, commentsRatioUpper, action, owner = payload.decode().split(",")
+            name, value, action, owner = payload.decode().split(",")
         except ValueError:
             raise InvalidTransaction("Invalid payload serialization")
 
         if not name:
             raise InvalidTransaction ('Name is required')
+        if not value:
+            raise InvalidTransaction ('Value is required')
         if not action:
             raise InvalidTransaction('Action is required')
-        if action not in ('create', 'transfer', 'accept', 'reject'):
+        if action not in ('create', 'propose', 'vote'):
             raise InvalidTransaction('Invalid action: {}'.format(action))
 
         self.name = name
-        self.largeClass = largeClass
-        self.smallClass = smallClass
-        self.largeMethod = largeMethod
-        self.smallMethod = smallMethod
-        self.largeParameterList = largeParameterList
-        self.godClass = godClass
-        self.inapropriateIntimacy = inapropriateIntimacy
-        self.commentsRatioLower = commentsRatioLower
-        self.commentsRatioUpper = commentsRatioUpper
+        self.value = value
         self.action = action
         self.owner = owner
 
@@ -52,49 +44,17 @@ class codeSmellPayload(object):
         return codeSmellPayload(payload=payload)
 
     @property
-    def action(self):
+    def name(self):
         return self.name
 
     @property
-    def action(self):
-        return self.largeClass
-
-    @property
-    def action(self):
-        return self.smallClass
-
-    @property
-    def action(self):
-        return self.largeMethod
-
-    @property
-    def action(self):
-        return self.smallMethod
-
-    @property
-    def action(self):
-        return self.largeParameterList
-
-    @property
-    def action(self):
-        return self.godClass
-
-    @property
-    def action(self):
-        return self.inapropriateIntimacy
-
-    @property
-    def action(self):
-        return self.commentsRatioLower
-
-    @property
-    def action(self):
-        return self.commentsRatioUpper
+    def value(self):
+        return self.value
 
     @property
     def action(self):
         return self.action
 
     @property
-    def action(self):
+    def owner(self):
         return self.owner

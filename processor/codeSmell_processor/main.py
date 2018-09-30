@@ -38,6 +38,7 @@ def parse_args(args):
 
     parser.add_argument(
         '-C', '--connect',
+        default='tcp://localhost:4004',
         help='Endpoint for the validator connection')
 
     parser.add_argument(
@@ -47,7 +48,7 @@ def parse_args(args):
         help='Increase output sent to stderr')
 
     try:
-        version = pkg.get_distribution(DISTRIBUTION_NAME).version
+        version = pkg_resources.get_distribution(DISTRIBUTION_NAME).version
     except pkg_resources.DistributionNotFound:
         version = 'UNKOWN'
 
@@ -61,7 +62,7 @@ def parse_args(args):
 
 def load_codeSmell_config(first_config):
     default_codeSmell_config = load_default_codeSmell_config()
-    config_file = os.path.join.(get_config_dir(), 'codeSmell.toml')
+    config_file = os.path.join(get_config_dir(), 'codeSmell.toml')
 
     toml_config = load_toml_codeSmell_config()
 
@@ -76,11 +77,12 @@ def main(args=None):
     opts = parse_args(args)
     processor = None
     try:
-        arg_config = _create_asset(opts)
-        codeSmell_config = load_codeSmell_config(arg_config)
-        processor = TransactionProcessor(url=codeSmell_config.connect)
+        #arg_config = create_codeSmell_config(opts)
+        #codeSmell_config = load_codeSmell_config(arg_config)
+        #processor = TransactionProcessor(url=codeSmell_config.connect)
+        processor = TransactionProcessor(url=opts.connect)
 
-        #if not toml, try loading yaml
+        """#if not toml, try loading yaml
         if log_config is None:
             log_config = get_log_config(filename="codeSmell_log_config.yaml")
 
@@ -91,7 +93,7 @@ def main(args=None):
             #use the transaction processor zmq identity for filename
             log_configuration(
             log_dir=log_dir,
-            name="codeSmell-" + str(processor.zmq_id)[2:-1])
+            name="codeSmell-" + str(processor.zmq_id)[2:-1])"""
 
         init_console_logging(verbose_level=opts.verbose)
 

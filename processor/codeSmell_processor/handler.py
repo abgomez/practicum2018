@@ -52,18 +52,9 @@ class codeSmellTransactionHandler(TransactionHandler):
 
             code_smell = codeSmell (
                          name=codeSmell_payload.name,
-                         largeClass=codeSmell_payload.largeClass,
-                         smallClass=codeSmell_payload.smallClass,
-                         largeMethod=codeSmell_payload.largeMethod,
-                         smallMethod=codeSmell_payload.smallMethod,
-                         largeParameterList=codeSmell_payload.largeParameterList,
-                         godClass=codeSmell_payload.godClass,
-                         inapropriateIntimacy=codeSmell_payload.inapropriateIntimacy,
-                         commentsRatioLower=codeSmell_payload.commentsRatioLower,
-                         commentsRatioUpper=codeSmell_payload.commentsRatioUpper,
+                         value=codeSmell_payload.value,
                          action=codeSmell_payload.action,
-                         owner=signer,
-                         state=codeSmell_state)
+                         owner=signer)
 
             codeSmell_state.set_codeSmell(codeSmell_payload.name, code_smell)
             _display("Peer {} created a codeSmell config.".format(signer[:6]))
@@ -83,7 +74,7 @@ def _display(msg):
         msg = [msg]
 
     #pylint: disable=logging-not-lazy
-    LOGGER.debug("+" + lenght + 2) * "-" + "+")
+    LOGGER.debug("+" + (lenght + 2) * "-" + "+")
     for line in msg:
         LOGGER.debug("+" + line.center(lenght) + " +")
     LOGGER.debug("+" + (lenght + 2) * "-" + "+")
