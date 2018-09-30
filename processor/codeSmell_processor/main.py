@@ -12,16 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # -----------------------------------------------------------------------------
-
-import argparse
+import os
 import sys
-import sawtooth_sdk
+import argparse
+import pkg_resources
 
+from sawtooth_sdk.processor.log  import log_configuration
+from sawtooth_sdk.processor.log  import init_console_logging
 from sawtooth_sdk.processor.core import TransactionProcessor
-from sawtooth_sdk.processor.log import init_console_logging
-
 from codeSmell_processor.handler import codeSmellTransactionHandler
 
+from sawtooth_sdk.processor.config import get_log_dir
+from sawtooth_sdk.processor.config import get_log_config
+from sawtooth_sdk.processor.config import get_config_dir
+from codeSmell_processor.config.codeSmell import codeSmellConfig
+from codeSmell_processor.config.codeSmell import merge_codeSmell_config
+from codeSmell_processor.config.codeSmell import load_toml_codeSmell_config
+from codeSmell_processor.config.codeSmell import load_default_codeSmell_config
+
+DISTRIBUTION_NAME = 'sawtooth-codeSmell'
 
 def parse_args(args):
     parser = argparse.ArgumentParser(
@@ -29,7 +38,6 @@ def parse_args(args):
 
     parser.add_argument(
         '-C', '--connect',
-        default='tcp://localhost:4004',
         help='Endpoint for the validator connection')
 
     parser.add_argument(
@@ -38,8 +46,29 @@ def parse_args(args):
         default=0,
         help='Increase output sent to stderr')
 
+    try:
+        version = pkg.get_distribution(DISTRIBUTION_NAME).version
+    except pkg_resources.DistributionNotFound:
+        version = 'UNKOWN'
+
+    parser.add_argument(
+        '-V', '--version',
+        action='version',
+        version=(DISTRIBUTION_NAME + ' (Hyperledger Sawtooth) version {}').format(version),
+        help='print version information')
+
     return parser.parse_args(args)
 
+def load_codeSmell_config(first_config):
+    default_codeSmell_config = load_default_codeSmell_config()
+    config_file = os.path.join.(get_config_dir(), 'codeSmell.toml')
+
+    toml_config = load_toml_codeSmell_config()
+
+    return merge_codeSmell_config(configs=[first_config, toml_config, default_codeSmell_config])
+
+def create_codeSmell_config(args):
+    return codeSmellConfig(connect=args.connect)
 
 def main(args=None):
     if args is None:
@@ -47,7 +76,22 @@ def main(args=None):
     opts = parse_args(args)
     processor = None
     try:
-        processor = TransactionProcessor(url=opts.connect)
+        arg_config = _create_asset(opts)
+        codeSmell_config = load_codeSmell_config(arg_config)
+        processor = TransactionProcessor(url=codeSmell_config.connect)
+
+        #if not toml, try loading yaml
+        if log_config is None:
+            log_config = get_log_config(filename="codeSmell_log_config.yaml")
+
+        if log_config is not None:
+            log_configuration(log_config=log_config)
+        else:
+            log_dir = get_log_dir()
+            #use the transaction processor zmq identity for filename
+            log_configuration(
+            log_dir=log_dir,
+            name="codeSmell-" + str(processor.zmq_id)[2:-1])
 
         init_console_logging(verbose_level=opts.verbose)
 

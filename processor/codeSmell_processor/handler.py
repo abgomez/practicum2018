@@ -14,18 +14,17 @@
 # -----------------------------------------------------------------------------
 
 import logging
-import sawtooth_sdk
 
-from sawtooth_sdk.processor.handler import TransactionHandler
+from sawtooth_sdk.processor.exceptions import InternalError
 from sawtooth_sdk.processor.exceptions import InvalidTransaction
+from sawtooth_sdk.processor.handler import TransactionHandler
 
-from codeSmell_processor.codeSmell_payload import codeSmellPayload
+from codeSmell_processor.codeSmell_state import codeSmell
 from codeSmell_processor.codeSmell_state import codeSmellState
 from codeSmell_processor.codeSmell_state import CODESMELL_NAMESPACE
-
+from codeSmell_processor.codeSmell_payload import codeSmellPayload
 
 LOGGER = logging.getLogger(__name__)
-
 
 class codeSmellTransactionHandler(TransactionHandler):
 
@@ -38,10 +37,6 @@ class codeSmellTransactionHandler(TransactionHandler):
         return ['0.1']
 
     @property
-    def encodings(self):
-        return ['application/json']
-
-    @property
     def namespaces(self):
         return [CODESMELL_NAMESPACE]
 
@@ -49,26 +44,46 @@ class codeSmellTransactionHandler(TransactionHandler):
         header = transaction.header
         signer = header.signer_public_key
 
-        payload = codeSmellPayload(transaction.payload)
-        state = codeSmellState(context)
+        codeSmell_payload = codeSmellPayload.from_bytes(transaction.payload)
+        codeSmell_state = codeSmellState(context)
 
-        LOGGER.info('Handling transaction: %s > %s %s:: %s',
-                    payload.action,
-                    payload.asset,
-                    '> ' + payload.owner[:8] + '... ' if payload.owner else '',
-                    signer[:8] + '... ')
 
-        if payload.action == 'create':
-            _create_asset(asset=payload.asset,
-                          owner=signer,
-                          state=state)
+        if codeSmell_payload.action == 'create':
+
+            code_smell = codeSmell (
+                         name=codeSmell_payload.name,
+                         largeClass=codeSmell_payload.largeClass,
+                         smallClass=codeSmell_payload.smallClass,
+                         largeMethod=codeSmell_payload.largeMethod,
+                         smallMethod=codeSmell_payload.smallMethod,
+                         largeParameterList=codeSmell_payload.largeParameterList,
+                         godClass=codeSmell_payload.godClass,
+                         inapropriateIntimacy=codeSmell_payload.inapropriateIntimacy,
+                         commentsRatioLower=codeSmell_payload.commentsRatioLower,
+                         commentsRatioUpper=codeSmell_payload.commentsRatioUpper,
+                         action=codeSmell_payload.action,
+                         owner=signer,
+                         state=codeSmell_state)
+
+            codeSmell_state.set_codeSmell(codeSmell_payload.name, code_smell)
+            _display("Peer {} created a codeSmell config.".format(signer[:6]))
+
         else:
             raise InvalidTransaction('Unhandled action: {}'.format(
                 payload.action))
 
+def _display(msg):
+    n = msg.count("\n")
 
-def _create_asset(asset, owner, state):
-    if state.get_asset(asset) is not None:
-        raise InvalidTransaction(
-            'Invalid action: Asset already exists: {}'.format(asset))
-    state.set_asset(asset, owner)
+    if n > 0:
+        msg = msg.split("\n")
+        lenght = max(len(line) for line in msg)
+    else:
+        lenght = len(msg)
+        msg = [msg]
+
+    #pylint: disable=logging-not-lazy
+    LOGGER.debug("+" + lenght + 2) * "-" + "+")
+    for line in msg:
+        LOGGER.debug("+" + line.center(lenght) + " +")
+    LOGGER.debug("+" + (lenght + 2) * "-" + "+")

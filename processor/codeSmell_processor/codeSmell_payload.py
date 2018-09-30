@@ -13,9 +13,6 @@
 # limitations under the License.
 # -----------------------------------------------------------------------------
 
-import json
-import cbor
-
 from sawtooth_sdk.processor.exceptions import InvalidTransaction
 
 
@@ -23,35 +20,81 @@ class codeSmellPayload(object):
 
     def __init__(self, payload):
         try:
-            #data = json.loads(payload.decode('utf-8'))
-            data = cbor.loads(payload)
+            #The payload is csv utf-8 encoded string
+            name, largeClass, smallClass, largeMethod, smallMethod,\
+            largeParameterList, godClass, inapropriateIntimacy,\
+            commentsRatioLower, commentsRatioUpper, action, owner = payload.decode().split(",")
         except ValueError:
             raise InvalidTransaction("Invalid payload serialization")
 
-        action = data.get('action')
-        asset = data.get('asset')
-        owner = data.get('owner')
-
+        if not name:
+            raise InvalidTransaction ('Name is required')
         if not action:
             raise InvalidTransaction('Action is required')
         if action not in ('create', 'transfer', 'accept', 'reject'):
             raise InvalidTransaction('Invalid action: {}'.format(action))
 
-        if not asset:
-            raise InvalidTransaction('Asset is required')
+        self.name = name
+        self.largeClass = largeClass
+        self.smallClass = smallClass
+        self.largeMethod = largeMethod
+        self.smallMethod = smallMethod
+        self.largeParameterList = largeParameterList
+        self.godClass = godClass
+        self.inapropriateIntimacy = inapropriateIntimacy
+        self.commentsRatioLower = commentsRatioLower
+        self.commentsRatioUpper = commentsRatioUpper
+        self.action = action
+        self.owner = owner
 
-        self._action = action
-        self._asset = asset
-        self._owner = owner
+    @staticmethod
+    def from_bytes(payload):
+        return codeSmellPayload(payload=payload)
 
     @property
     def action(self):
-        return self._action
+        return self.name
 
     @property
-    def asset(self):
-        return self._asset
+    def action(self):
+        return self.largeClass
 
     @property
-    def owner(self):
-        return self._owner
+    def action(self):
+        return self.smallClass
+
+    @property
+    def action(self):
+        return self.largeMethod
+
+    @property
+    def action(self):
+        return self.smallMethod
+
+    @property
+    def action(self):
+        return self.largeParameterList
+
+    @property
+    def action(self):
+        return self.godClass
+
+    @property
+    def action(self):
+        return self.inapropriateIntimacy
+
+    @property
+    def action(self):
+        return self.commentsRatioLower
+
+    @property
+    def action(self):
+        return self.commentsRatioUpper
+
+    @property
+    def action(self):
+        return self.action
+
+    @property
+    def action(self):
+        return self.owner
