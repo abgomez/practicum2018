@@ -125,6 +125,8 @@ def create_parser(prog_name):
 
 def do_create(args):
     name = args.name
+    value = args.value
+    action = args.action
 
     url = _get_url(args)
     keyfile = _get_keyfile(args)
@@ -139,7 +141,7 @@ def do_create(args):
             auth_password=auth_password)
     else:
         response = client.create(
-            name, auth_user=auth_user,
+            name, value, action, auth_user=auth_user,
             auth_password=auth_password)
 
     print("Response: {}".format(response))
