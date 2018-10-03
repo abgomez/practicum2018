@@ -32,7 +32,7 @@ from sawtooth_sdk.protobuf.batch_pb2 import BatchHeader
 from sawtooth_sdk.protobuf.transaction_pb2 import Transaction
 from sawtooth_sdk.protobuf.transaction_pb2 import TransactionHeader
 
-from client.codeSmell_exceptions import codeSmellException
+from codeSmell_exceptions import codeSmellException
 
 def _sha512(data):
     return hashlib.sha512(data).hexdigest()
@@ -46,7 +46,7 @@ class codeSmellClient:
             return
 
         try:
-            with open(keyfile_ as fd):
+            with open(keyfile) as fd:
                 private_key_str = fd.read().strip()
         except OSError as err:
             raise codeSmellException('Failed to read private key {}: {}'.format(keyfile, str(err)))
@@ -58,14 +58,15 @@ class codeSmellClient:
 
         self._signer = CryptoFactory(create_context('secp256k1')).new_signer(private_key)
 
-    def create(self, name, value, wait=None, auth_user=None, auth_password=None):
-        return self.send_codeSmell_txn(
+    def create(self, name, value, action, wait=None, auth_user=None, auth_password=None):
+        print (name, value, action)
+        """return self._send_codeSmell_txn(
             name,
             value,
             "create",
             wait=wait,
             auth_user=auth_user,
-            auth_password=auth_password)
+            auth_password=auth_password)"""
 
     def _get_status(self, batch_id, wait, auth_user=None, auth_password=None):
         try:
@@ -178,8 +179,8 @@ class codeSmellClient:
                     auth_user=auth_user,
                     auth_password=auth_password)
 
-                if status !='PENDING'
-                return response
+                if status != 'PENDING':
+                    return response
 
             return response
         return self._send_request(
