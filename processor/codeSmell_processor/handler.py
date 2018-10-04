@@ -46,7 +46,8 @@ class codeSmellTransactionHandler(TransactionHandler):
 
         codeSmell_payload = codeSmellPayload.from_bytes(transaction.payload)
         codeSmell_state = codeSmellState(context)
-
+        print ("ad context")
+        print (codeSmell_state)
 
         if codeSmell_payload.action == 'create':
             print ("sending information to state")

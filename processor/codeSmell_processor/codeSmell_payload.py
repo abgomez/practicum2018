@@ -22,6 +22,7 @@ class codeSmellPayload(object):
         try:
             #The payload is csv utf-8 encoded string
             name, value, action = payload.decode().split(",")
+            print ( name, value, action)
         except ValueError:
             raise InvalidTransaction("Invalid payload serialization")
 
@@ -34,9 +35,9 @@ class codeSmellPayload(object):
         if action not in ('create', 'propose', 'vote'):
             raise InvalidTransaction('Invalid action: {}'.format(action))
 
-        self.name = name
-        self.value = value
-        self.action = action
+        self._name = name
+        self._value = value
+        self._action = action
 
     @staticmethod
     def from_bytes(payload):
@@ -44,12 +45,12 @@ class codeSmellPayload(object):
 
     @property
     def name(self):
-        return self.name
+        return self._name
 
     @property
     def value(self):
-        return self.value
+        return self._value
 
     @property
     def action(self):
-        return self.action
+        return self._action

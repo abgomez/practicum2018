@@ -24,7 +24,7 @@ def _make_codeSmell_address(name):
     return CODESMELL_NAMESPACE + hashlib.sha512(name.encode('utf-8')).hexdigest()[:64]
 
 class codeSmell:
-    def _init_(self, name, value, action):
+    def __init__(self, name, value, action):
         self.name = name
         self.value = value
         self.action = action
@@ -32,7 +32,7 @@ class codeSmell:
 class codeSmellState:
     TIMEOUT = 3
 
-    def _init_(self, context):
+    def __init__(self, context):
         """Constructor
 
         Ars:
@@ -51,8 +51,10 @@ class codeSmellState:
             codesmell (codeSmell): The information specifying the current specs.
         """
         dictCodeSmells = self._load_codeSmell(codeSmell_name=codeSmell_name)
+        #dictCodeSmells = {}
         dictCodeSmells[codeSmell_name] = codesmell
 
+        print ("before calling store")
         self._store_codeSmell(codeSmell_name, dictCodeSmells=dictCodeSmells)
 
     def _load_codeSmell(self, codeSmell_name):
@@ -75,13 +77,14 @@ class codeSmellState:
 
         return dictCodeSmells
 
-    def _store_codeSmell(self, codeSmell_name, codesmell):
+    def _store_codeSmell(self, codeSmell_name, dictCodeSmells):
+        print ("inse store")
         address = _make_codeSmell_address(codeSmell_name)
 
-        state_data = self._serialize(codesmell)
+        state_data = self._serialize(dictCodeSmells)
         self._address_cache[address] = state_data
 
-        self._context.set_state({adress: state_data}, timeout=self.TIMEOUT)
+        self._context.set_state({address: state_data}, timeout=self.TIMEOUT)
 
     def _deserialize(self, data):
         """Take bytes stored in state and deserialize them into Python codeSmell Objects
@@ -114,12 +117,12 @@ class codeSmellState:
             (bytes): The UTF-8 encoded string stored in state.
         """
 
-        codesmell_str = []
+        codesmell_strs = []
         for name, g in codesmell.items():
             codesmell_str = ",".join([name, g.value, g.action])
-            codesmell_str.append(codesmell_str)
+            codesmell_strs.append(codesmell_str)
 
-        return "|".join(sorted(codesmell_str)).encode()
+        return "|".join(sorted(codesmell_strs)).encode()
 """
 def _get_address(key):
     return hashlib.sha512(key.encode('utf-8')).hexdigest()[:62]

@@ -30,7 +30,7 @@ from codeSmell_exceptions import codeSmellException
 
 DISTRIBUTION_NAME = 'sawtooth-codeSmell'
 
-DEFAULT_URL = 'http:/127.0.0.1:8008'
+DEFAULT_URL = 'http://127.0.0.1:8008'
 
 def create_console_handler(verbose_level):
     clog = logging.StreamHandler()
@@ -156,7 +156,7 @@ def do_create(args):
     value = args.metric
     action = "create"
 
-    print (name, value, action)
+
 
     url = _get_url(args)
     keyfile = _get_keyfile(args)
@@ -174,6 +174,7 @@ def do_create(args):
             #auth_password=auth_password
 
     print("Response: {}".format(response))
+    print (name, value, action, url, keyfile)
     #print (name, value, action, url, keyfile)
     #pprint (client)
 

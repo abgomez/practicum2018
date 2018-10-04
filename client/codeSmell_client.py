@@ -20,6 +20,7 @@ import base64
 import hashlib
 import requests
 
+from pprint import pprint
 from base64 import b64encode
 from sawtooth_signing import ParseError
 from sawtooth_signing import CryptoFactory
@@ -79,7 +80,7 @@ class codeSmellClient:
             raise codeSmellException(err)
 
     def _get_prefix(self):
-        return _sha512('codeSmell'.encode('utf-8'))[0:6]
+        return _sha512('code-smell'.encode('utf-8'))[0:6]
 
     def _get_address(self, name):
         codeSmell_prefix = self._get_prefix()
@@ -138,6 +139,8 @@ class codeSmellClient:
         #serialization is just a delimited utf-8 encoded strings
         payload = ",".join([name, value, action]).encode()
 
+        pprint(payload)
+
         #construct the address
         address = self._get_address(name)
 
@@ -145,6 +148,8 @@ class codeSmellClient:
             signer_public_key=self._signer.get_public_key().as_hex(),
             family_name="code-smell",
             family_version="0.1",
+            #inputs='19d832',
+            #outputs='19d832',
             inputs=[address],
             outputs=[address],
             dependencies=[],
@@ -183,6 +188,7 @@ class codeSmellClient:
                     return response
 
             return response
+
         return self._send_request(
             "batches" , batch_list.SerializeToString(),
             'application/octet-stream',
