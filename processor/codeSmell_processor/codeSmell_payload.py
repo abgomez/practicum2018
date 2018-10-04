@@ -21,7 +21,7 @@ class codeSmellPayload(object):
     def __init__(self, payload):
         try:
             #The payload is csv utf-8 encoded string
-            name, value, action, owner = payload.decode().split(",")
+            name, value, action = payload.decode().split(",")
         except ValueError:
             raise InvalidTransaction("Invalid payload serialization")
 
@@ -37,7 +37,6 @@ class codeSmellPayload(object):
         self.name = name
         self.value = value
         self.action = action
-        self.owner = owner
 
     @staticmethod
     def from_bytes(payload):
@@ -54,7 +53,3 @@ class codeSmellPayload(object):
     @property
     def action(self):
         return self.action
-
-    @property
-    def owner(self):
-        return self.owner

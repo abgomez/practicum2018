@@ -59,14 +59,14 @@ class codeSmellClient:
         self._signer = CryptoFactory(create_context('secp256k1')).new_signer(private_key)
 
     def create(self, name, value, action, wait=None, auth_user=None, auth_password=None):
-        print (name, value, action)
-        """return self._send_codeSmell_txn(
+        #print (name, value, action)
+        return self._send_codeSmell_txn(
             name,
             value,
-            "create",
+            action,
             wait=wait,
             auth_user=auth_user,
-            auth_password=auth_password)"""
+            auth_password=auth_password)
 
     def _get_status(self, batch_id, wait, auth_user=None, auth_password=None):
         try:
@@ -79,7 +79,7 @@ class codeSmellClient:
             raise codeSmellException(err)
 
     def _get_prefix(self):
-        return _sha512('codeSmell'.concode('utf-8'))[0:6]
+        return _sha512('codeSmell'.encode('utf-8'))[0:6]
 
     def _get_address(self, name):
         codeSmell_prefix = self._get_prefix()
@@ -99,19 +99,19 @@ class codeSmellClient:
         else:
             url = "http://{}/{}".format(self._base_url, suffix)
 
-        header = {}
+        headers = {}
         if auth_user is not None:
             auth_string = "{}:{}".format(auth_user, auth_password)
             b64_string = b64encode(auth_string.encode()).decode()
             auth_header = 'Basic {}'.format(b64_string)
             headers['authorization'] = auth_header
 
-        if contex_type is not None:
-            headers['Content-Type'] = contex_type
+        if content_type is not None:
+            headers['Content-Type'] = content_type
 
         try:
             if data is not None:
-                result = requests.posts(url, headers=headers, data=data)
+                result = requests.post(url, headers=headers, data=data)
             else:
                 result = requests.get(url, headers=headers)
 
@@ -120,7 +120,7 @@ class codeSmellClient:
             elif not result.ok:
                 raise codeSmellException("Error {}:{}".format(result.status_code, result.reason))
 
-        except request.ConnectionError as err:
+        except requests.ConnectionError as err:
             raise codeSmellException ('Failed to connect to {}:{}'.format(url, str(err)))
 
         except BaseException as err:
@@ -136,7 +136,7 @@ class codeSmellClient:
                             auth_user=None,
                             auth_password=None):
         #serialization is just a delimited utf-8 encoded strings
-        payload = ",".join(name, value, action).encode()
+        payload = ",".join([name, value, action]).encode()
 
         #construct the address
         address = self._get_address(name)
@@ -145,8 +145,8 @@ class codeSmellClient:
             signer_public_key=self._signer.get_public_key().as_hex(),
             family_name="code-smell",
             family_version="0.1",
-            inputs=[adress],
-            outputs=[adress],
+            inputs=[address],
+            outputs=[address],
             dependencies=[],
             payload_sha512=_sha512(payload),
             batcher_public_key=self._signer.get_public_key().as_hex(),
@@ -201,7 +201,7 @@ class codeSmellClient:
 
         batch = Batch(
             header=header,
-            transactions=transaction,
+            transactions=transactions,
             header_signature=signature)
 
         return BatchList(batches=[batch])

@@ -24,11 +24,10 @@ def _make_codeSmell_address(name):
     return CODESMELL_NAMESPACE + hashlib.sha512(name.encode('utf-8')).hexdigest()[:64]
 
 class codeSmell:
-    def _init_(self, name, value, action, owmer):
+    def _init_(self, name, value, action):
         self.name = name
         self.value = value
         self.action = action
-        self.owner = owner
 
 class codeSmellState:
     TIMEOUT = 3
@@ -51,13 +50,13 @@ class codeSmellState:
             codeSmell_name (str): The name
             codesmell (codeSmell): The information specifying the current specs.
         """
-        #dictCodeSmells = self._load_codeSmell(codeSmell_name=codeSmell_name)
+        dictCodeSmells = self._load_codeSmell(codeSmell_name=codeSmell_name)
         dictCodeSmells[codeSmell_name] = codesmell
 
         self._store_codeSmell(codeSmell_name, dictCodeSmells=dictCodeSmells)
 
     def _load_codeSmell(self, codeSmell_name):
-        adress = _make_codeSmell_address(codeSmell_name)
+        address = _make_codeSmell_address(codeSmell_name)
 
         if address in self._address_cache:
             if self._address_cache[address]:
@@ -77,10 +76,10 @@ class codeSmellState:
         return dictCodeSmells
 
     def _store_codeSmell(self, codeSmell_name, codesmell):
-        adress = _make_codeSmell_address(codeSmell_name)
+        address = _make_codeSmell_address(codeSmell_name)
 
         state_data = self._serialize(codesmell)
-        self._address_cache[adress] = state_data
+        self._address_cache[address] = state_data
 
         self._context.set_state({adress: state_data}, timeout=self.TIMEOUT)
 
@@ -117,10 +116,10 @@ class codeSmellState:
 
         codesmell_str = []
         for name, g in codesmell.items():
-            codesmell_str = ",".join([name, g.value, g.action, g.owner])
+            codesmell_str = ",".join([name, g.value, g.action])
             codesmell_str.append(codesmell_str)
 
-        return "|".join(sorted(codesmell_str)).encoded()
+        return "|".join(sorted(codesmell_str)).encode()
 """
 def _get_address(key):
     return hashlib.sha512(key.encode('utf-8')).hexdigest()[:62]

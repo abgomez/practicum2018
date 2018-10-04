@@ -49,13 +49,12 @@ class codeSmellTransactionHandler(TransactionHandler):
 
 
         if codeSmell_payload.action == 'create':
-
+            print ("sending information to state")
             code_smell = codeSmell (
                          name=codeSmell_payload.name,
                          value=codeSmell_payload.value,
-                         action=codeSmell_payload.action,
-                         owner=signer)
-
+                         action=codeSmell_payload.action)
+            print ("set code Smell")
             codeSmell_state.set_codeSmell(codeSmell_payload.name, code_smell)
             _display("Peer {} created a codeSmell config.".format(signer[:6]))
 
