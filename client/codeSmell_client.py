@@ -33,7 +33,7 @@ from sawtooth_sdk.protobuf.batch_pb2 import BatchHeader
 from sawtooth_sdk.protobuf.transaction_pb2 import Transaction
 from sawtooth_sdk.protobuf.transaction_pb2 import TransactionHeader
 
-from codeSmell_exceptions import codeSmellException
+from code_smell_exceptions import codeSmellException
 
 def _sha512(data):
     return hashlib.sha512(data).hexdigest()
@@ -60,14 +60,14 @@ class codeSmellClient:
         self._signer = CryptoFactory(create_context('secp256k1')).new_signer(private_key)
 
     def create(self, name, value, action, wait=None, auth_user=None, auth_password=None):
-        #print (name, value, action)
-        return self._send_codeSmell_txn(
+        print (name, value, action)
+        """return self._send_codeSmell_txn(
             name,
             value,
             action,
             wait=wait,
             auth_user=auth_user,
-            auth_password=auth_password)
+            auth_password=auth_password)"""
 
     def _get_status(self, batch_id, wait, auth_user=None, auth_password=None):
         try:
