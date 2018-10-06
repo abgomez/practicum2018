@@ -60,7 +60,7 @@ class codeSmellClient:
         self._signer = CryptoFactory(create_context('secp256k1')).new_signer(private_key)
 
     def create(self, name, value, action, wait=None, auth_user=None, auth_password=None):
-        print (name, value, action)
+        print ("on clien", name, value, action)
         """return self._send_codeSmell_txn(
             name,
             value,
@@ -148,8 +148,6 @@ class codeSmellClient:
             signer_public_key=self._signer.get_public_key().as_hex(),
             family_name="code-smell",
             family_version="0.1",
-            #inputs='19d832',
-            #outputs='19d832',
             inputs=[address],
             outputs=[address],
             dependencies=[],

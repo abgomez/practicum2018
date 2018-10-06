@@ -17,15 +17,15 @@ from __future__ import print_function
 
 import os
 import sys
+import toml
 import getpass
 import logging
 import argparse
 import traceback
 import pkg_resources
 
-from pprint import pprint
 from colorlog import ColoredFormatter
-from codeSmell_client import codeSmellClient
+from code_smell_client import codeSmellClient
 from code_smell_exceptions import codeSmellException
 
 DISTRIBUTION_NAME = 'sawtooth-code_smell'
@@ -33,6 +33,16 @@ HOME = os.getenv('SAWTOOTH_HOME')
 DEFAULT_URL = 'http://127.0.0.1:8008'
 
 def create_console_handler(verbose_level):
+    """
+    Create console handler, defines logging level
+
+    Args:
+        verbose_level (int): argument passed by user defining if verbose will be active
+
+    Returns:
+        clog: console handler to display verbose output
+    """
+
     clog = logging.StreamHandler()
     formatter = ColoredFormatter(
         "%(log_color)s[%(asctime)s %(levelname)-8s%(module)s]%(reset)s "
@@ -58,22 +68,29 @@ def create_console_handler(verbose_level):
     return clog
 
 def setup_loggers(verbose_level):
+    """
+    Set up level of verbose.
+
+    Args:
+        verbose_level (int): argument passed by user defining if verbose will be active
+    """
+
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     logger.addHandler(create_console_handler(verbose_level))
 
 def add_create_parser(subparser, parent_parser):
     """
-        add_create_parser, add subparser create. this subparser will process new code smells.
+    add_create_parser, add subparser create. this subparser will process new code smells.
 
-        Args:
-            subparser, subparser handler (subparser)
-            parent_parser, parent parser (parser)
+    Args:
+        subparser (subparser): subparser handler
+        parent_parser (parser): parent parser
     """
     parser = subparser.add_parser(
         'create',
-        help='Create new codeSmell --name <name>, --value <value>',
-        description='Send a transaction to create a code smell',
+        help='Create new codeSmell <name>, <metric>',
+        description='Send a transaction to create a new code smell',
         parents=[parent_parser])
 
     parser.add_argument(
@@ -101,7 +118,8 @@ def add_create_parser(subparser, parent_parser):
         type=str,
         help="identify directory of user's private key file")
 
-    parser.add_argument(
+    ## TODO: define if need it
+    """parser.add_argument(
         '--auth-user',
         type=str,
         help='specify username for authentication if REST API is using Basic Auth')
@@ -109,7 +127,7 @@ def add_create_parser(subparser, parent_parser):
     parser.add_argument(
         '--auth-password',
         type=str,
-        help='specify password for authentication if REST API is using Basic Auth')
+        help='specify password for authentication if REST API is using Basic Auth')"""
 
     parser.add_argument(
         '--disable-client-valiation',
@@ -122,16 +140,17 @@ def add_create_parser(subparser, parent_parser):
         nargs='?',
         const=sys.maxsize,
         type=int,
+        default=10, ## TODO: update this value to something appropiate
         help='set time, in seconds, to wait for code smell to commit')
 
 def add_default_parser(subparser, parent_parser):
     """
-        add_default_parser, add subparser default. this subparser will load a
-            default configuration for the code_smell family.
+    add_default_parser, add subparser default. this subparser will load a
+        default configuration for the code_smell family.
 
-        Args:
-            subparser, subparser handler (subparser)
-            parent_parser, parent parser (parser)
+    Args:
+        subparser (subparser): subparser handler
+        parent_parser (parser): parent parser
     """
     parser = subparser.add_parser(
         'default',
@@ -154,7 +173,8 @@ def add_default_parser(subparser, parent_parser):
         type=str,
         help="identify directory of user's private key file")
 
-    parser.add_argument(
+    ## TODO: define if need it
+    """parser.add_argument(
         '--auth-user',
         type=str,
         help='specify username for authentication if REST API is using Basic Auth')
@@ -162,7 +182,7 @@ def add_default_parser(subparser, parent_parser):
     parser.add_argument(
         '--auth-password',
         type=str,
-        help='specify password for authentication if REST API is using Basic Auth')
+        help='specify password for authentication if REST API is using Basic Auth')"""
 
     parser.add_argument(
         '--disable-client-valiation',
@@ -175,9 +195,23 @@ def add_default_parser(subparser, parent_parser):
         nargs='?',
         const=sys.maxsize,
         type=int,
+        default=10, ## TODO: update this value to something appropiate
         help='set time, in seconds, to wait for code smell to commit')
 
 def create_parent_parser(prog_name):
+    """
+    Create parent parser
+
+    Args:
+        prog_name (str): program name
+
+    Returns:
+        parser: parent argument parser
+
+    Raises:
+        DistributionNotFound: version of family not found
+
+    """
     parent_parser = argparse.ArgumentParser(prog=prog_name, add_help=False)
     parent_parser.add_argument(
         '-v', '--verbose',
@@ -199,14 +233,17 @@ def create_parent_parser(prog_name):
 
 def create_parser(prog_name):
     """
-        create_parser, function to create parent parser as well as subparsers.
+    Function to create parent parser as well as subparsers.
 
-        Args:
-            prog_name, program name (str)
+    Args:
+        prog_name (str): program name
+
+    Returns:
+        parser
     """
     parent_parser = create_parent_parser(prog_name)
 
-    #create subparser, each subparser requires a different set of arguments.
+    """create subparser, each subparser requires a different set of arguments."""
     parser = argparse.ArgumentParser(
         description='Suserum custom family (code_smell) to process and manage code smell transactions.',
         parents=[parent_parser])
@@ -226,63 +263,128 @@ def load_default(args):
         Args:
             args, arguments (array)
     """
-    #identify code_smell family configuration file
+
+    """identify code_smell family configuration file"""
     conf_file = HOME + '/etc/code_smell.toml'
+
     if os.path.isfile(conf_file):
-        print (conf_file)
+
+        url = _get_url(args)
+        keyfile = _get_keyfile(args)
+
+        try:
+            with open(conf_file) as config:
+                raw_config = config.read()
+        except IOError as e:
+            raise codeSmellException ("Unable to load code smell family configuration file")
+
+        """load toml config into a dict"""
+        parsed_toml_config = toml.loads(raw_config)
+
+        """get default code smells"""
+        code_smells_config = parsed_toml_config['code_smells']
+
+        """traverse dict and process each code smell
+            nested for loop to procces level two dict."""
+        for code_smells in code_smells_config.values():
+            for name, metric in code_smells.items():
+                """send trasaction"""
+                client = codeSmellClient(base_url=url, keyfile=keyfile)
+                if args.wait and args.wait > 0:
+                    response = client.create(name, metric, "create", wait=args.wait)
+                else:
+                    response = client.create(name, metric, "create")
+                print("Response: {}".format(response))
     else:
         raise codeSmellException("Configuration File {} does not exists".format(conf_file))
 
 def do_create(args):
-    name = args.name
-    value = args.metric
+    """
+    Create new code smell, users can define custom code smells.
+
+    Args:
+        args (array): code smell arguments
+
+    Raises:
+        codeSmellException: missing arguement
+    """
+
+    """validate arguments"""
+    if args.name is not None:
+        name = args.name
+    else:
+        raise codeSmellException ("Missing code smell name")
+
+    if args.metric is not None:
+        metric = args.metric
+    else:
+        raise codeSmellException ("Missing code smell metric")
+
     action = "create"
 
     url = _get_url(args)
     keyfile = _get_keyfile(args)
-    #auth_user, auth_password = _get_auth_info(args)
 
-    #client = codeSmellClient(base_url=url, keyfile=keyfile)
+    print ("Payload: ", name, metric)
+
+    ## TODO: define if we wantto create new codes smells for version one
+    """client = codeSmellClient(base_url=url, keyfile=keyfile)
 
     if args.wait and args.wait > 0:
-        reponse = client.create(name, value, action, wait=args.wait)
-            #auth_user=auth_user,
-            #auth_password=auth_password
+        response = client.create(name, value, action, wait=args.wait)
     else:
         response = client.create(name, value, action)
-            #auth_user=auth_user,
-            #auth_password=auth_password
 
-    print("Response: {}".format(response))
-    print (name, value, action, url, keyfile)
-    #print (name, value, action, url, keyfile)
-    #pprint (client)
+    print("Response: {}".format(response))"""
 
 def _get_url(args):
+    """
+    Pull rest_api url, use default if user does not specify
+
+    Args:
+        args (array): arguments from parser
+
+    Returns:
+        str: url of rest_api
+
+    """
     return DEFAULT_URL if args.url is None else args.url
 
 def _get_keyfile(args):
+    """
+    Retrives user's private key directory.
+    Each transaction should be sign by the user who create it.
+
+    Args:
+        args (array): private key username
+
+    Returns:
+        str: path of user's private key
+    """
+
     username = getpass.getuser() if args.username is None else args.username
     home = os.path.expanduser("~")
     key_dir = os.path.join(home, ".sawtooth", "keys")
 
     return '{}/{}.priv'.format(key_dir, username)
 
-def _get_auth_info(args):
+## TODO: need to define if we are going to use user and password.
+"""def _get_auth_info(args):
     auth_user = args.auth_user
     auth_password = args.auth_password
     if auth_user is not None and auth_password is None:
         auth_password = getpass.getpass(prompt="Auth Password: ")
 
     return auth_user, auth_password
+"""
 
 def main(prog_name=os.path.basename(sys.argv[0]), args=None):
     """
-        main function, expose core functionality of the code_smell family.
+    Expose core functionality of the code_smell family.
 
-        Args:
-            prog_name, program name (str)
-            args, arguments to process code smells (array)
+    Args:
+        prog_name, program name (str)
+        args, arguments to process code smells (array)
     """
     if args is None:
         args=sys.argv[1:]
@@ -298,22 +400,22 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None):
 
     if args.command == 'create':
         do_create(args)
-    if args.command == 'default':
+    elif args.command == 'default':
         load_default(args)
     else:
         raise codeSmellException("Invalid command: {}".format(args.command))
 
 def main_wrapper():
     """
-        Wrapper to main function.
+    Wrapper to main function.
 
-        Args:
-            None
+    Args:
+        None
 
-        Exceptions:
-            codeSmellException
-            KeyboardInterrupt
-            BaseException
+    Exceptions:
+        codeSmellException
+        KeyboardInterrupt
+        BaseException
     """
     try:
         main()
