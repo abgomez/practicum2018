@@ -194,6 +194,15 @@ class codeSmellClient:
             auth_password=auth_password)
 
     def _create_batch_list(self, transactions):
+        """
+        Create the list of batches that the client will send to the REST API
+        
+        Args:
+            transactions (transaction): transaction(s) included in the batch
+
+        Returns:
+            BatchList: a list of batches to send to the REST API
+        """
         transaction_signatures = [t.header_signature for t in transactions]
 
         header = BatchHeader(
