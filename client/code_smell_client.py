@@ -60,14 +60,14 @@ class codeSmellClient:
         self._signer = CryptoFactory(create_context('secp256k1')).new_signer(private_key)
 
     def create(self, name, value, action, wait=None, auth_user=None, auth_password=None):
-        print ("on clien", name, value, action)
-        """return self._send_codeSmell_txn(
+        print ("on client", name, value, action)
+        return self._send_codeSmell_txn(
             name,
             value,
             action,
             wait=wait,
             auth_user=auth_user,
-            auth_password=auth_password)"""
+            auth_password=auth_password)
 
     def _get_status(self, batch_id, wait, auth_user=None, auth_password=None):
         try:
@@ -111,11 +111,13 @@ class codeSmellClient:
             headers['Content-Type'] = content_type
 
         try:
+            print (data)
             if data is not None:
                 result = requests.post(url, headers=headers, data=data)
             else:
                 result = requests.get(url, headers=headers)
 
+            print (result.status_code)
             if result.status_code == 404:
                 raise codeSmellException("No such code Smell: {}".format(name))
             elif not result.ok:
@@ -167,6 +169,7 @@ class codeSmellClient:
         batch_list = self._create_batch_list([transaction])
         batch_id = batch_list.batches[0].header_signature
 
+        print (wait)
         if wait and wait > 0:
             wait_time = 0
             start_time = time.time()
@@ -196,7 +199,7 @@ class codeSmellClient:
     def _create_batch_list(self, transactions):
         """
         Create the list of batches that the client will send to the REST API
-        
+
         Args:
             transactions (transaction): transaction(s) included in the batch
 

@@ -140,7 +140,7 @@ def add_create_parser(subparser, parent_parser):
         nargs='?',
         const=sys.maxsize,
         type=int,
-        default=10, ## TODO: update this value to something appropiate
+        #default=10, ## TODO: update this value to something appropiate
         help='set time, in seconds, to wait for code smell to commit')
 
 def add_default_parser(subparser, parent_parser):
@@ -195,8 +195,38 @@ def add_default_parser(subparser, parent_parser):
         nargs='?',
         const=sys.maxsize,
         type=int,
-        default=10, ## TODO: update this value to something appropiate
+        #default=30, ## TODO: update this value to something appropiate
         help='set time, in seconds, to wait for code smell to commit')
+
+def add_list_parser(subparser, parent_parser):
+    """
+    define subparser list. Displays information for all code smells
+
+    Args:
+        subparser (subparser): subparser handler
+        parent_parser (parser): parent parser
+    """
+    parser = subparser.add_parser(
+        'list',
+        help='Displays information for all code smells',
+        description='Displays information for all code smells in state, showing'
+        'the code smell ID and metic.',
+        parents=[parent_parser])
+
+    parser.add_argument(
+        '--url',
+        type=str,
+        help='specify URL of REST API')
+
+    parser.add_argument(
+        '--username',
+        type=str,
+        help="identify name of user's private key file")
+
+    parser.add_argument(
+        '--key-dir',
+        type=str,
+        help="identify directory of user's private key file")
 
 def create_parent_parser(prog_name):
     """
@@ -253,8 +283,36 @@ def create_parser(prog_name):
     subparsers.required = True
     add_create_parser(subparsers, parent_parser)
     add_default_parser(subparsers, parent_parser)
+    add_list_parser(subparsers, parent_parser)
 
     return parser
+
+def list_all_smells(args):
+    """
+        list all code smell
+            <name> <metric>
+
+        Args:
+            args (array) arguments
+    """
+    url = _get_url(args)
+    keyfile = _get_keyfile(args)
+    client = codeSmellClient(base_url=url, keyfile=keyfile)
+
+    codeSmell_list = [
+        code_smell.split(',')
+        for code_smells in client.list();
+        for code_smell in code_smells.decode().split('|')
+    ]
+
+    if codeSmell_list is not None:
+        format = "<%s>, <%s>"
+        print(format % ('CODE SMELL', 'METRIC'))
+        for codeSmell_data in codeSmell_list:
+            name, metric = codeSmell_data
+            print(format % (name, metric))
+    else:
+        raise codeSmellException ("Could not retrieve listing.")
 
 def load_default(args):
     """
@@ -289,12 +347,14 @@ def load_default(args):
         for code_smells in code_smells_config.values():
             for name, metric in code_smells.items():
                 """send trasaction"""
+                print("code sent: {}".format(name))
                 client = codeSmellClient(base_url=url, keyfile=keyfile)
                 if args.wait and args.wait > 0:
-                    response = client.create(name, metric, "create", wait=args.wait)
+                    response = client.create(name, str(metric), "create", wait=args.wait)
                 else:
-                    response = client.create(name, metric, "create")
+                    response = client.create(name, str(metric), "create")
                 print("Response: {}".format(response))
+
     else:
         raise codeSmellException("Configuration File {} does not exists".format(conf_file))
 
@@ -402,6 +462,8 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None):
         do_create(args)
     elif args.command == 'default':
         load_default(args)
+    elif args.command == 'list':
+        list_all_smells(args)
     else:
         raise codeSmellException("Invalid command: {}".format(args.command))
 

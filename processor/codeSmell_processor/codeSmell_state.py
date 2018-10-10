@@ -50,8 +50,8 @@ class codeSmellState:
             codeSmell_name (str): The name
             codesmell (codeSmell): The information specifying the current specs.
         """
-        dictCodeSmells = self._load_codeSmell(codeSmell_name=codeSmell_name)
-        #dictCodeSmells = {}
+        #dictCodeSmells = self._load_codeSmell(codeSmell_name=codeSmell_name)
+        dictCodeSmells = {}
         dictCodeSmells[codeSmell_name] = codesmell
 
         print ("before calling store")
