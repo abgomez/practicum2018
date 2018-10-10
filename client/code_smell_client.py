@@ -59,6 +59,21 @@ class codeSmellClient:
 
         self._signer = CryptoFactory(create_context('secp256k1')).new_signer(private_key)
 
+    def list(self):
+        code_smell_prefix = self._get_prefix()
+
+        result = self._send_request(
+            "state?address={}".format(code_smell_prefix)
+            )
+
+        #pprint (result)
+        try:
+            encoded_entries = yaml.safe_load(result)["data"]
+
+            return [ base64.b64decode(entry["data"]) for entry in encoded_entries ]
+        except BaseException:
+            return None
+
     def create(self, name, value, action, wait=None, auth_user=None, auth_password=None):
         print ("on client", name, value, action)
         return self._send_codeSmell_txn(
@@ -111,13 +126,13 @@ class codeSmellClient:
             headers['Content-Type'] = content_type
 
         try:
-            print (data)
+            #print (data)
             if data is not None:
                 result = requests.post(url, headers=headers, data=data)
             else:
                 result = requests.get(url, headers=headers)
 
-            print (result.status_code)
+            #print (result.status_code)
             if result.status_code == 404:
                 raise codeSmellException("No such code Smell: {}".format(name))
             elif not result.ok:

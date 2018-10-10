@@ -24,6 +24,7 @@ import argparse
 import traceback
 import pkg_resources
 
+from pprint import pprint
 from colorlog import ColoredFormatter
 from code_smell_client import codeSmellClient
 from code_smell_exceptions import codeSmellException
@@ -301,16 +302,17 @@ def list_all_smells(args):
 
     codeSmell_list = [
         code_smell.split(',')
-        for code_smells in client.list();
+        for code_smells in client.list()
         for code_smell in code_smells.decode().split('|')
     ]
 
+    pprint (codeSmell_list)
     if codeSmell_list is not None:
-        format = "<%s>, <%s>"
-        print(format % ('CODE SMELL', 'METRIC'))
+        format = "<%s>, <%s>, <%s>"
+        print(format % ('CODE SMELL', 'METRIC', 'ACTION'))
         for codeSmell_data in codeSmell_list:
-            name, metric = codeSmell_data
-            print(format % (name, metric))
+            name, metric, action = codeSmell_data
+            print(format % (name, metric, action))
     else:
         raise codeSmellException ("Could not retrieve listing.")
 
