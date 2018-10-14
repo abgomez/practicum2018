@@ -18,11 +18,9 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
-    'families/code-smell'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'client'))
 
-from processor.main import main
+from code_smell_cli import main_wrapper
 
 if __name__ == '__main__':
-    main()
+    main_wrapper()

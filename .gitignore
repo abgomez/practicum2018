@@ -1,9 +1,8 @@
 # all folder but processor #
-*config*
 *_pycache_*
 *intkey*
 /data
 /keys
 /logs
 /policy
-/processor/codeSmell_processor/l
+setup
